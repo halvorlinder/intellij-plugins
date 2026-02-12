@@ -3,11 +3,13 @@
     <name>Maven Context Runner</name>
     <vendor>Your Name</vendor>
     <description><![CDATA[
-    Run Maven goals (verify, test, spotless:apply) for the module containing the current file.
-    
+    Run Maven goals (verify, test, clean, spotless:apply) for the module containing the current file.
+    All commands (except Spotless Apply) run spotless:apply first.
+
     Default keyboard shortcuts:
     - Option+V: Maven Verify
-    - Option+T: Maven Test  
+    - Option+T: Maven Test
+    - Option+C: Maven Clean
     - Option+F: Spotless Apply
     ]]></description>
 
@@ -33,6 +35,15 @@
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt T"/>
         </action>
 
+        <action id="MavenContextRunner.Clean"
+                class="com.example.mavencontextrunner.MavenCleanAction"
+                text="Maven Clean (Current Module)"
+                description="Run mvn spotless:apply clean for the module containing the current file">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt C"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt C"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt C"/>
+        </action>
+
         <action id="MavenContextRunner.SpotlessApply"
                 class="com.example.mavencontextrunner.SpotlessApplyAction"
                 text="Spotless Apply (Current Module)"
@@ -47,6 +58,7 @@
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <reference ref="MavenContextRunner.Verify"/>
             <reference ref="MavenContextRunner.Test"/>
+            <reference ref="MavenContextRunner.Clean"/>
             <reference ref="MavenContextRunner.SpotlessApply"/>
         </group>
     </actions>

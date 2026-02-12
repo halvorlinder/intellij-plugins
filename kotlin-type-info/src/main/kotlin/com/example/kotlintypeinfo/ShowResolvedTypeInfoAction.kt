@@ -297,7 +297,11 @@ class ShowResolvedTypeInfoAction : AnAction() {
     // ── Hint display ────────────────────────────────────────────
 
     private fun showHint(editor: Editor, html: String) {
-        val label = HintUtil.createInformationLabel(html)
+        val scheme = editor.colorsScheme
+        val font = scheme.editorFontName
+        val size = scheme.editorFontSize
+        val wrapped = "<span style=\"font-family:'$font',monospace;font-size:${size}pt;\">$html</span>"
+        val label = HintUtil.createInformationLabel(wrapped)
         val hint = LightweightHint(label)
         val hintManager = HintManager.getInstance() as HintManagerImpl
         val position = hintManager.getHintPosition(hint, editor, HintManager.ABOVE)

@@ -1,6 +1,7 @@
 package com.example.kotlintypeinfo
 
 import com.intellij.codeInsight.hint.HintManager
+import com.intellij.codeInsight.hint.HintManagerImpl
 import com.intellij.codeInsight.hint.HintUtil
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -13,6 +14,7 @@ import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.ui.LightweightHint
 import org.jetbrains.kotlin.analysis.api.KaExperimentalApi
 import org.jetbrains.kotlin.analysis.api.KaSession
 import org.jetbrains.kotlin.analysis.api.analyze
@@ -33,7 +35,7 @@ import org.jetbrains.kotlin.idea.references.mainReference
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.types.Variance
 import java.awt.Color
-import javax.swing.JComponent
+import java.awt.Font
 
 @OptIn(KaExperimentalApi::class)
 class ShowResolvedTypeInfoAction : AnAction() {
@@ -56,17 +58,17 @@ class ShowResolvedTypeInfoAction : AnAction() {
         val ktElement = PsiTreeUtil.getParentOfType(leafElement, KtElement::class.java, false) ?: return
 
         ApplicationManager.getApplication().executeOnPooledThread {
-            val text = ReadAction.compute<String?, Throwable> {
+            val html = ReadAction.compute<String?, Throwable> {
                 analyze(ktElement) {
                     tryResolveCall(leafElement)
                         ?: tryResolveReference(leafElement)
                         ?: tryExpressionType(leafElement)
                 }
             }
-            if (text != null) {
+            if (html != null) {
                 ApplicationManager.getApplication().invokeLater {
                     if (editor.isDisposed) return@invokeLater
-                    showStyledHint(editor, text)
+                    showHint(editor, html)
                 }
             }
         }
@@ -110,10 +112,10 @@ class ShowResolvedTypeInfoAction : AnAction() {
     private fun KaSession.tryExpressionType(element: PsiElement): String? {
         val expression = PsiTreeUtil.getParentOfType(element, KtExpression::class.java) ?: return null
         val type = expression.expressionType ?: return null
-        return renderType(type)
+        return styledType(renderType(type))
     }
 
-    // ── Rendering ───────────────────────────────────────────────
+    // ── HTML Rendering ──────────────────────────────────────────
 
     private fun KaSession.renderFunctionCall(funcCall: KaFunctionCall<*>): String {
         val typeArgMapping = funcCall.typeArgumentsMapping
@@ -125,127 +127,188 @@ class ShowResolvedTypeInfoAction : AnAction() {
         }
         val symbol = funcCall.partiallyAppliedSymbol.symbol
         val extensionReceiver = funcCall.partiallyAppliedSymbol.extensionReceiver
+        val colors = resolveColors()
 
         return when (symbol) {
             is KaConstructorSymbol -> {
-                val returnType = renderType(signature.returnType)
-                val params = renderParams(signature)
-                "constructor $returnType($params)"
+                val returnType = styledType(renderType(signature.returnType))
+                val params = renderParamsHtml(signature, colors)
+                "${colors.kw("constructor")} $returnType($params)"
             }
             else -> {
-                val modifiers = buildModifiers(symbol)
-                val receiverPrefix = if (extensionReceiver != null) {
-                    signature.receiverType?.let { renderType(it) + "." } ?: ""
-                } else ""
+                val sb = StringBuilder()
+                appendModifiersHtml(sb, symbol, colors)
+                sb.append("${colors.kw("fun")} ")
+                if (extensionReceiver != null) {
+                    signature.receiverType?.let {
+                        sb.append(styledType(renderType(it)))
+                        sb.append(".")
+                    }
+                }
                 val name = (symbol as? KaNamedFunctionSymbol)?.name?.asString() ?: "invoke"
-                val params = renderParams(signature)
-                val returnType = renderType(signature.returnType)
-                "${modifiers}fun $receiverPrefix$name($params): $returnType"
+                sb.append(name)
+                sb.append("(")
+                sb.append(renderParamsHtml(signature, colors))
+                sb.append("): ")
+                sb.append(styledType(renderType(signature.returnType)))
+                sb.toString()
             }
         }
     }
 
     private fun KaSession.renderCallableSymbol(symbol: KaCallableSymbol): String {
+        val colors = resolveColors()
         return when (symbol) {
             is KaPropertySymbol -> {
                 val keyword = if (symbol.isVal) "val" else "var"
                 val receiverPrefix = symbol.receiverParameter?.let {
-                    renderType(symbol.returnType) + "."
+                    styledType(renderType(symbol.returnType)) + "."
                 } ?: ""
-                "$keyword $receiverPrefix${symbol.name.asString()}: ${renderType(symbol.returnType)}"
+                "${colors.kw(keyword)} $receiverPrefix${symbol.name.asString()}: ${styledType(renderType(symbol.returnType))}"
             }
             is KaVariableSymbol -> {
                 val keyword = if (symbol.isVal) "val" else "var"
-                "$keyword ${symbol.name.asString()}: ${renderType(symbol.returnType)}"
+                "${colors.kw(keyword)} ${symbol.name.asString()}: ${styledType(renderType(symbol.returnType))}"
             }
-            else -> renderType(symbol.returnType)
+            else -> styledType(renderType(symbol.returnType))
         }
     }
 
-    private fun KaSession.renderParams(signature: KaFunctionSignature<*>): String {
+    private fun KaSession.renderParamsHtml(signature: KaFunctionSignature<*>, colors: Colors): String {
         if (signature.valueParameters.isEmpty()) return ""
         val rendered = signature.valueParameters.map { p ->
-            "${p.name.asString()}: ${renderType(p.returnType)}"
+            "${colors.param(p.name.asString())}: ${styledType(renderType(p.returnType))}"
         }
         val singleLine = rendered.joinToString(", ")
-        if (singleLine.length <= 50) return singleLine
-        return "\n" + rendered.joinToString(",\n") { "    $it" } + "\n"
+        // Check length without HTML tags for wrapping decision
+        val plainLength = singleLine.replace(Regex("<[^>]*>"), "").length
+        if (plainLength <= 60) return singleLine
+        return "<br>" + rendered.joinToString(",<br>") { "&nbsp;&nbsp;&nbsp;&nbsp;$it" } + "<br>"
     }
 
-    private fun buildModifiers(symbol: KaFunctionSymbol): String {
-        val parts = mutableListOf<String>()
+    private fun appendModifiersHtml(sb: StringBuilder, symbol: KaFunctionSymbol, colors: Colors) {
         if (symbol is KaNamedFunctionSymbol) {
+            val mods = mutableListOf<String>()
             when (symbol.visibility) {
-                KaSymbolVisibility.PUBLIC -> parts.add("public")
-                KaSymbolVisibility.PROTECTED -> parts.add("protected")
-                KaSymbolVisibility.INTERNAL -> parts.add("internal")
-                KaSymbolVisibility.PRIVATE -> parts.add("private")
+                KaSymbolVisibility.PUBLIC -> mods.add("public")
+                KaSymbolVisibility.PROTECTED -> mods.add("protected")
+                KaSymbolVisibility.INTERNAL -> mods.add("internal")
+                KaSymbolVisibility.PRIVATE -> mods.add("private")
                 else -> {}
             }
-            if (symbol.isInline) parts.add("inline")
-            if (symbol.isSuspend) parts.add("suspend")
-            if (symbol.isInfix) parts.add("infix")
-            if (symbol.isOperator) parts.add("operator")
-            if (symbol.isTailRec) parts.add("tailrec")
-            if (symbol.isExternal) parts.add("external")
+            if (symbol.isInline) mods.add("inline")
+            if (symbol.isSuspend) mods.add("suspend")
+            if (symbol.isInfix) mods.add("infix")
+            if (symbol.isOperator) mods.add("operator")
+            if (symbol.isTailRec) mods.add("tailrec")
+            if (symbol.isExternal) mods.add("external")
+            for (mod in mods) {
+                sb.append(colors.kw(mod))
+                sb.append(" ")
+            }
         }
-        return if (parts.isEmpty()) "" else parts.joinToString(" ") + " "
     }
 
     private fun KaSession.renderType(type: KaType): String {
         return type.render(KaTypeRendererForSource.WITH_SHORT_NAMES, Variance.INVARIANT)
     }
 
-    // ── Hint display ────────────────────────────────────────────
-
-    private val KOTLIN_KEYWORDS = setOf(
-        "fun", "val", "var", "public", "private", "protected", "internal",
-        "inline", "suspend", "infix", "operator", "tailrec", "external",
-        "override", "open", "abstract", "sealed", "data", "class", "object",
-        "constructor", "return", "if", "else", "when", "for", "while",
-        "throw", "try", "catch", "finally", "vararg", "crossinline", "noinline",
-        "reified", "companion", "enum", "annotation", "interface"
-    )
-
-    private fun showStyledHint(editor: Editor, text: String) {
-        val scheme = EditorColorsManager.getInstance().globalScheme
-        val kwKey = TextAttributesKey.find("KOTLIN_KEYWORD")
-        val kwColor = scheme.getAttributes(kwKey)?.foregroundColor
-            ?: scheme.getAttributes(TextAttributesKey.find("DEFAULT_KEYWORD"))?.foregroundColor
-            ?: Color(0xCC, 0x78, 0x32)
-        val font = scheme.editorFontName
-        val fontSize = scheme.editorFontSize
-
-        val html = buildHtml(text, kwColor, font, fontSize)
-        val label = HintUtil.createInformationLabel(html) as JComponent
-        HintManager.getInstance().showInformationHint(editor, label)
-    }
-
-    private fun buildHtml(text: String, kwColor: Color, font: String, fontSize: Int): String {
-        val kwHex = String.format("#%02x%02x%02x", kwColor.red, kwColor.green, kwColor.blue)
+    /** Wraps type text so that type names get class-name color and punctuation stays default. */
+    private fun styledType(typeText: String): String {
+        val colors = resolveColors()
         val sb = StringBuilder()
-        sb.append("<html><body style='font-family:\"$font\",monospace;font-size:${fontSize}pt;white-space:pre;'>")
+        val buf = StringBuilder()
 
-        for (line in text.split('\n')) {
-            // Tokenize: split on word boundaries, preserving delimiters
-            val tokens = line.split(Regex("(?<=\\b)|(?=\\b)"))
-            for (token in tokens) {
-                if (token in KOTLIN_KEYWORDS) {
-                    sb.append("<span style='color:$kwHex;font-weight:bold;'>")
-                    sb.append(escapeHtml(token))
-                    sb.append("</span>")
-                } else {
-                    sb.append(escapeHtml(token))
-                }
+        fun flushIdent() {
+            if (buf.isNotEmpty()) {
+                sb.append(colors.type(buf.toString()))
+                buf.setLength(0)
             }
-            sb.append("<br>")
         }
 
-        sb.append("</body></html>")
+        for (ch in typeText) {
+            when {
+                ch.isLetterOrDigit() || ch == '_' || ch == '@' -> buf.append(ch)
+                else -> {
+                    flushIdent()
+                    sb.append(esc(ch.toString()))
+                }
+            }
+        }
+        flushIdent()
         return sb.toString()
     }
 
-    private fun escapeHtml(text: String): String {
-        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    // ── Colors ──────────────────────────────────────────────────
+
+    private data class Colors(
+        val kwHex: String, val kwBold: Boolean,
+        val typeHex: String?,
+        val paramHex: String?
+    ) {
+        fun kw(text: String): String {
+            val bold = if (kwBold) "font-weight:bold;" else ""
+            return "<span style=\"color:$kwHex;$bold\">${esc(text)}</span>"
+        }
+
+        fun type(text: String): String {
+            if (typeHex == null) return esc(text)
+            return "<span style=\"color:$typeHex;\">${esc(text)}</span>"
+        }
+
+        fun param(text: String): String {
+            if (paramHex == null) return esc(text)
+            return "<span style=\"color:$paramHex;\">${esc(text)}</span>"
+        }
+    }
+
+    private fun resolveColors(): Colors {
+        val scheme = EditorColorsManager.getInstance().globalScheme
+
+        fun colorOf(vararg keys: String): Color? {
+            for (key in keys) {
+                val c = scheme.getAttributes(TextAttributesKey.find(key))?.foregroundColor
+                if (c != null) return c
+            }
+            return null
+        }
+
+        fun hex(c: Color?): String? = c?.let { String.format("#%02x%02x%02x", it.red, it.green, it.blue) }
+
+        val kwColor = colorOf("KOTLIN_KEYWORD", "DEFAULT_KEYWORD") ?: Color(0xCC, 0x78, 0x32)
+        val kwAttrs = scheme.getAttributes(TextAttributesKey.find("KOTLIN_KEYWORD"))
+            ?: scheme.getAttributes(TextAttributesKey.find("DEFAULT_KEYWORD"))
+        val kwBold = kwAttrs?.fontType?.let { it and Font.BOLD != 0 } ?: true
+
+        val typeColor = colorOf(
+            "KOTLIN_CLASS", "KOTLIN_TYPE_PARAMETER",
+            "DEFAULT_CLASS_NAME", "DEFAULT_INTERFACE_NAME"
+        )
+        val paramColor = colorOf("KOTLIN_PARAMETER", "DEFAULT_PARAMETER")
+
+        return Colors(
+            kwHex = hex(kwColor)!!,
+            kwBold = kwBold,
+            typeHex = hex(typeColor),
+            paramHex = hex(paramColor)
+        )
+    }
+
+    // ── Hint display ────────────────────────────────────────────
+
+    private fun showHint(editor: Editor, html: String) {
+        val label = HintUtil.createInformationLabel(html)
+        val hint = LightweightHint(label)
+        val hintManager = HintManager.getInstance() as HintManagerImpl
+        val position = hintManager.getHintPosition(hint, editor, HintManager.ABOVE)
+        val flags = HintManager.HIDE_BY_ANY_KEY or
+                HintManager.HIDE_BY_TEXT_CHANGE or
+                HintManager.HIDE_BY_SCROLLING
+        hintManager.showEditorHint(hint, editor, position, flags, 0, false)
+    }
+
+    companion object {
+        fun esc(text: String): String =
+            text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     }
 }

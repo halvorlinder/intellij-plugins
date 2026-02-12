@@ -1,0 +1,19 @@
+# Gradle
+**/build/
+**/.gradle/
+
+# IntelliJ IDEA project files
+**/.idea/
+**/*.iml
+**/*.iws
+**/*.ipr
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Kotlin
+**/*.class
+
+# Local Gradle properties
+**/local.properties

@@ -1,0 +1,53 @@
+<idea-plugin>
+    <id>com.example.mavencontextrunner</id>
+    <name>Maven Context Runner</name>
+    <vendor>Your Name</vendor>
+    <description><![CDATA[
+    Run Maven goals (verify, test, spotless:apply) for the module containing the current file.
+    
+    Default keyboard shortcuts:
+    - Option+V: Maven Verify
+    - Option+T: Maven Test  
+    - Option+F: Spotless Apply
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.idea.maven</depends>
+
+    <actions>
+        <action id="MavenContextRunner.Verify"
+                class="com.example.mavencontextrunner.MavenVerifyAction"
+                text="Maven Verify (Current Module)"
+                description="Run mvn verify for the module containing the current file">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt V"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt V"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt V"/>
+        </action>
+
+        <action id="MavenContextRunner.Test"
+                class="com.example.mavencontextrunner.MavenTestAction"
+                text="Maven Test (Current Module)"
+                description="Run mvn test for the module containing the current file">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt T"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt T"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt T"/>
+        </action>
+
+        <action id="MavenContextRunner.SpotlessApply"
+                class="com.example.mavencontextrunner.SpotlessApplyAction"
+                text="Spotless Apply (Current Module)"
+                description="Run mvn spotless:apply for the module containing the current file">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt F"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt F"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt F"/>
+        </action>
+
+        <!-- Add to Tools menu for discoverability -->
+        <group id="MavenContextRunner.Menu" text="Maven Context Runner" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <reference ref="MavenContextRunner.Verify"/>
+            <reference ref="MavenContextRunner.Test"/>
+            <reference ref="MavenContextRunner.SpotlessApply"/>
+        </group>
+    </actions>
+</idea-plugin>

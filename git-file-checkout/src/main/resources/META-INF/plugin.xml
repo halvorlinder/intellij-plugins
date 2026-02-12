@@ -1,0 +1,23 @@
+<idea-plugin>
+    <id>com.example.gitfilecheckout</id>
+    <name>Git File Checkout</name>
+    <vendor>Your Name</vendor>
+    <description><![CDATA[
+    Checkout a single file from any branch or commit hash.
+    The file contents are replaced in-place as an unstaged modification (undoable with Cmd+Z).
+
+    Usage: Open a file, press Cmd+Shift+A, type "Checkout File from Branch", select a branch or enter a commit hash.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>Git4Idea</depends>
+
+    <actions>
+        <action id="GitFileCheckout.CheckoutFile"
+                class="com.example.gitfilecheckout.GitFileCheckoutAction"
+                text="Checkout File from Branch/Commit"
+                description="Replace the current file with its contents from another branch or commit">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

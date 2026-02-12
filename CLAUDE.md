@@ -24,9 +24,9 @@ When the user describes a problem or desired behavior:
 ## Build Stack
 
 - **Gradle** 8.5 (each plugin has its own wrapper)
-- **Kotlin** 1.9.22, JVM toolchain 17
+- **Kotlin** 1.9.22 (2.1.0 for `kotlin-type-info`), JVM toolchain 17
 - **IntelliJ Platform Gradle Plugin** 2.2.1
-- **Target platform**: IntelliJ IDEA Ultimate 2024.1+ (`sinceBuild = "241"`, no upper bound)
+- **Target platform**: IntelliJ IDEA Ultimate 2024.1+ (`sinceBuild = "241"`, no upper bound). `kotlin-type-info` targets 2025.1+ (`sinceBuild = "251"`) and requires K2 mode.
 - **Java 21** required to run Gradle: `export JAVA_HOME=$(/usr/libexec/java_home -v 21)`
 
 ## Build & Install Commands

@@ -19,6 +19,7 @@ When the user describes a problem or desired behavior:
 |---|---|---|
 | `git-file-checkout` | Git File Checkout | Check out a single file from any branch/commit without switching branches. Replaces the file in-place as an unstaged change (Cmd+Z to undo). |
 | `maven-context-runner` | Maven Context Runner | Run Maven goals (verify, test, clean, spotless:apply) on the module containing the current file. All commands except Spotless Apply run spotless:apply first. Shortcuts: Option+V, Option+T, Option+C, Option+F. |
+| `kotlin-type-info` | Kotlin Type Info | Show fully resolved type info for Kotlin expressions (substitutes generic type parameters). Bind via IdeaVim: `nmap gH :action KotlinTypeInfo.ShowResolvedTypeInfo<CR>`. |
 
 ## Build Stack
 

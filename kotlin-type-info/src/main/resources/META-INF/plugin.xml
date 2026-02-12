@@ -1,0 +1,31 @@
+<idea-plugin>
+    <id>com.example.kotlintypeinfo</id>
+    <name>Kotlin Type Info</name>
+    <vendor>Your Name</vendor>
+    <description><![CDATA[
+    Show fully resolved (substituted) type information for Kotlin expressions.
+    Unlike the built-in Type Info action, this inlines actual resolved types instead of showing generic signatures.
+
+    Example: hovering over <code>map</code> in <code>listOf("a").map { it.length }</code> shows
+    <code>fun Iterable&lt;String&gt;.map(transform: (String) -&gt; Int): List&lt;Int&gt;</code>
+    instead of the generic signature.
+
+    Usage: Bind the action "Show Resolved Type Info" to a key (e.g., gH in IdeaVim).
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.kotlin</depends>
+
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <supportsKotlinPluginMode supportsK2="true" />
+    </extensions>
+
+    <actions>
+        <action id="KotlinTypeInfo.ShowResolvedTypeInfo"
+                class="com.example.kotlintypeinfo.ShowResolvedTypeInfoAction"
+                text="Show Resolved Type Info"
+                description="Show fully resolved type information with substituted type parameters">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

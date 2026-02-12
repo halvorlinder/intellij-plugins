@@ -14,12 +14,16 @@ The plugin automatically detects which Maven module contains your current file a
 ## Building
 
 ```bash
+# From the repo root:
+../install-plugin.sh maven-context-runner
+
+# Or standalone:
 ./gradlew buildPlugin
 ```
 
 The plugin ZIP will be in `build/distributions/`.
 
-## Installing
+## Installing Manually
 
 1. Build the plugin (see above)
 2. In IntelliJ IDEA: **Settings → Plugins → ⚙️ → Install Plugin from Disk...**

@@ -7,6 +7,7 @@ A collection of custom IntelliJ IDEA plugins.
 | [git-file-checkout](git-file-checkout/) | Check out a single file from any branch or commit without switching branches |
 | [maven-context-runner](maven-context-runner/) | Run Maven goals on the module containing the current file via keyboard shortcuts |
 | [kotlin-type-info](kotlin-type-info/) | Show fully resolved type info for Kotlin expressions with substituted generic type parameters |
+| [vscode-window](vscode-window/) | VSCode-like window and panel management with keyboard shortcuts |
 
 ## Requirements
 

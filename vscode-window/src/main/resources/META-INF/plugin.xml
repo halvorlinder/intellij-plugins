@@ -1,0 +1,83 @@
+<idea-plugin>
+    <id>com.example.vscodewindow</id>
+    <name>VSCode Window</name>
+    <vendor>Your Name</vendor>
+    <description><![CDATA[
+    VSCode-like window and panel management for IntelliJ IDEA.
+    Sidebar focus, editor group focus, panel toggling with memory, and space-to-preview in the project tree.
+
+    Default keyboard shortcuts:
+    - Cmd+0: Focus/toggle Project tool window
+    - Cmd+1/2/3: Focus editor group 1/2/3
+    - Cmd+B: Toggle side panel (remembers last active)
+    - Cmd+J: Toggle bottom panel (remembers last active)
+    - Space / Option+Space: Preview file or toggle folder in project tree
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <projectListeners>
+        <listener class="com.example.vscodewindow.PanelStateService$ToolWindowTracker"
+                  topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
+        <listener class="com.example.vscodewindow.ProjectViewSpaceRegistrar"
+                  topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
+    </projectListeners>
+
+    <actions>
+        <action id="VscodeWindow.FocusProjectToolWindow"
+                class="com.example.vscodewindow.FocusProjectToolWindowAction"
+                text="Focus Project Tool Window"
+                description="Focus or toggle the Project tool window">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta 0"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta 0"/>
+        </action>
+
+        <action id="VscodeWindow.FocusEditorGroup1"
+                class="com.example.vscodewindow.FocusEditorGroup1Action"
+                text="Focus Editor Group 1"
+                description="Focus the first editor group">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta 1"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta 1"/>
+        </action>
+
+        <action id="VscodeWindow.FocusEditorGroup2"
+                class="com.example.vscodewindow.FocusEditorGroup2Action"
+                text="Focus Editor Group 2"
+                description="Focus the second editor group">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta 2"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta 2"/>
+        </action>
+
+        <action id="VscodeWindow.FocusEditorGroup3"
+                class="com.example.vscodewindow.FocusEditorGroup3Action"
+                text="Focus Editor Group 3"
+                description="Focus the third editor group">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta 3"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta 3"/>
+        </action>
+
+        <action id="VscodeWindow.CloseAllEditorsInOtherGroups"
+                class="com.example.vscodewindow.CloseAllEditorsInOtherGroupsAction"
+                text="Close All Editors in Other Groups"
+                description="Close all editors in non-active editor groups">
+            <add-to-group group-id="EditorTabPopupMenu" anchor="last"/>
+        </action>
+
+        <action id="VscodeWindow.ToggleSidePanel"
+                class="com.example.vscodewindow.ToggleSidePanelAction"
+                text="Toggle Side Panel"
+                description="Toggle visibility of left-anchored tool windows">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta B"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta B"/>
+        </action>
+
+        <action id="VscodeWindow.ToggleBottomPanel"
+                class="com.example.vscodewindow.ToggleBottomPanelAction"
+                text="Toggle Bottom Panel"
+                description="Toggle visibility of bottom-anchored tool windows">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta J"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta J"/>
+        </action>
+
+    </actions>
+</idea-plugin>

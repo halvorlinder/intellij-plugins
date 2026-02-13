@@ -1,0 +1,165 @@
+package com.example.usagepreview
+
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.popup.JBPopup
+import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.codeInsight.hint.HintManager
+import com.intellij.codeInsight.TargetElementUtil
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.search.searches.ReferencesSearch
+import java.awt.Dimension
+import java.awt.event.KeyAdapter
+import java.awt.event.KeyEvent
+
+data class UsageItem(
+    val virtualFile: VirtualFile,
+    val line: Int,
+    val offset: Int,
+    val presentableText: String,
+    val lineText: String,
+    val isDeclaration: Boolean = false
+)
+
+class ShowUsagesWithPreviewAction : AnAction() {
+
+    override fun actionPerformed(e: AnActionEvent) {
+        val project = e.project ?: return
+        val editor = e.getData(CommonDataKeys.EDITOR) ?: return
+
+        val element = ReadAction.compute<com.intellij.psi.PsiElement?, Throwable> {
+            TargetElementUtil.findTargetElement(
+                editor,
+                TargetElementUtil.ELEMENT_NAME_ACCEPTED or
+                        TargetElementUtil.REFERENCED_ELEMENT_ACCEPTED or
+                        TargetElementUtil.LOOKUP_ITEM_ACCEPTED
+            )
+        } ?: run {
+            HintManager.getInstance().showErrorHint(editor, "No symbol under caret")
+            return
+        }
+
+        object : Task.Backgroundable(project, "Finding Usages...", true) {
+            override fun run(indicator: ProgressIndicator) {
+                val usages = mutableListOf<UsageItem>()
+
+                // Add the declaration itself as the first item
+                ReadAction.run<Throwable> {
+                    val declFile = element.containingFile?.virtualFile
+                    val declDoc = element.containingFile?.let {
+                        PsiDocumentManager.getInstance(project).getDocument(it)
+                    }
+                    if (declFile != null && declDoc != null) {
+                        val declOffset = element.textOffset
+                        val declLine = declDoc.getLineNumber(declOffset)
+                        val lineStart = declDoc.getLineStartOffset(declLine)
+                        val lineEnd = declDoc.getLineEndOffset(declLine)
+                        val lineText = declDoc.getText(com.intellij.openapi.util.TextRange(lineStart, lineEnd)).trim()
+                        usages.add(
+                            UsageItem(
+                                virtualFile = declFile,
+                                line = declLine,
+                                offset = declOffset,
+                                presentableText = "${declFile.name}:${declLine + 1} (declaration)",
+                                lineText = lineText,
+                                isDeclaration = true
+                            )
+                        )
+                    }
+                }
+
+                // Find all references
+                val references = ReadAction.compute<Collection<com.intellij.psi.PsiReference>, Throwable> {
+                    ReferencesSearch.search(element).findAll()
+                }
+
+                ReadAction.run<Throwable> {
+                    for (ref in references) {
+                        indicator.checkCanceled()
+                        val refElement = ref.element
+                        val file = refElement.containingFile?.virtualFile ?: continue
+                        val doc = refElement.containingFile?.let {
+                            PsiDocumentManager.getInstance(project).getDocument(it)
+                        } ?: continue
+                        val offset = refElement.textOffset
+                        val line = doc.getLineNumber(offset)
+                        val lineStart = doc.getLineStartOffset(line)
+                        val lineEnd = doc.getLineEndOffset(line)
+                        val lineText = doc.getText(com.intellij.openapi.util.TextRange(lineStart, lineEnd)).trim()
+                        usages.add(
+                            UsageItem(
+                                virtualFile = file,
+                                line = line,
+                                offset = offset,
+                                presentableText = "${file.name}:${line + 1}",
+                                lineText = lineText
+                            )
+                        )
+                    }
+                }
+
+                if (usages.isEmpty()) {
+                    com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                        HintManager.getInstance().showErrorHint(editor, "No usages found")
+                    }
+                    return
+                }
+
+                com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                    showPopup(project, editor, usages)
+                }
+            }
+        }.queue()
+    }
+
+    private fun showPopup(project: Project, editor: Editor, usages: List<UsageItem>) {
+        var popup: JBPopup? = null
+
+        val panel = UsagePreviewPanel(project, usages) { usage ->
+            popup?.cancel()
+            OpenFileDescriptor(project, usage.virtualFile, usage.line, 0).navigate(true)
+        }
+
+        popup = JBPopupFactory.getInstance()
+            .createComponentPopupBuilder(panel, panel.list)
+            .setTitle("Usages (${usages.size})")
+            .setMovable(true)
+            .setResizable(true)
+            .setRequestFocus(true)
+            .setFocusable(true)
+            .setCancelOnClickOutside(true)
+            .setCancelOnOtherWindowOpen(true)
+            .setCancelKeyEnabled(true)
+            .setMinSize(Dimension(700, 400))
+            .setCancelCallback {
+                panel.dispose()
+                true
+            }
+            .createPopup()
+
+        // Add Enter key handler to the list
+        panel.list.addKeyListener(object : KeyAdapter() {
+            override fun keyPressed(e: KeyEvent) {
+                if (e.keyCode == KeyEvent.VK_ENTER) {
+                    val selected = panel.list.selectedValue ?: return
+                    popup.cancel()
+                    OpenFileDescriptor(project, selected.virtualFile, selected.line, 0).navigate(true)
+                }
+            }
+        })
+
+        popup.showInBestPositionFor(editor)
+    }
+
+    override fun update(e: AnActionEvent) {
+        e.presentation.isEnabledAndVisible = e.project != null && e.getData(CommonDataKeys.EDITOR) != null
+    }
+}

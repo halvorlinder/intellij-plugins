@@ -8,9 +8,16 @@ abstract class FocusEditorGroupAction(private val groupIndex: Int) : AnAction() 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val fem = FileEditorManagerEx.getInstanceEx(project)
-        val windows = fem.windows
-        if (groupIndex < windows.size) {
-            val target = windows[groupIndex]
+        val sorted = fem.windows
+            .mapNotNull { window ->
+                val comp = window.tabbedPane?.component ?: return@mapNotNull null
+                if (!comp.isShowing) return@mapNotNull null
+                window to comp.locationOnScreen.x
+            }
+            .sortedBy { it.second }
+            .map { it.first }
+        if (groupIndex < sorted.size) {
+            val target = sorted[groupIndex]
             fem.currentWindow = target
             target.requestFocus(true)
         }

@@ -1,0 +1,22 @@
+<idea-plugin>
+    <id>com.example.usagepreview</id>
+    <name>Usage Preview</name>
+    <vendor>Your Name</vendor>
+    <description><![CDATA[
+    Show usages with a syntax-highlighted editor preview panel.
+    Replaces the default usage popup with a dual-pane view: usage list on the left,
+    live editor preview on the right.
+
+    IdeaVim binding: nmap gd :action UsagePreview.ShowUsagesWithPreview<CR>
+    ]]></description>
+
+    <depends>com.intellij.modules.lang</depends>
+
+    <actions>
+        <action id="UsagePreview.ShowUsagesWithPreview"
+                class="com.example.usagepreview.ShowUsagesWithPreviewAction"
+                text="Show Usages with Preview"
+                description="Show usages of the symbol at caret with a syntax-highlighted preview panel">
+        </action>
+    </actions>
+</idea-plugin>

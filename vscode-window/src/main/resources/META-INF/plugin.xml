@@ -7,7 +7,7 @@
     Sidebar focus, editor group focus, panel toggling with memory, and space-to-preview in the project tree.
 
     Default keyboard shortcuts:
-    - Cmd+0: Focus/toggle Project tool window
+    - Cmd+0: Focus/toggle Project tool window (may conflict with VSCode keymap plugin; resolve in Settings > Keymap)
     - Cmd+1/2/3: Focus editor group 1/2/3
     - Cmd+B: Toggle side panel (remembers last active)
     - Cmd+J: Toggle bottom panel (remembers last active)
@@ -77,6 +77,22 @@
                 description="Toggle visibility of bottom-anchored tool windows">
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta J"/>
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta J"/>
+        </action>
+
+        <action id="VscodeWindow.SplitAndMoveRight"
+                class="com.example.vscodewindow.SplitAndMoveRightAction"
+                text="Split and Move Right"
+                description="Split editor right and move current file to new split">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta BACK_SLASH"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta BACK_SLASH"/>
+        </action>
+
+        <action id="VscodeWindow.EqualizeSplitWidths"
+                class="com.example.vscodewindow.EqualizeSplitWidthsAction"
+                text="Equalize Split Widths"
+                description="Make all editor splits equal width">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta shift BACK_SLASH"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta shift BACK_SLASH"/>
         </action>
 
     </actions>

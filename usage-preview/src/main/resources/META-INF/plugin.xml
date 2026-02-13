@@ -7,7 +7,9 @@
     Replaces the default usage popup with a dual-pane view: usage list on the left,
     live editor preview on the right.
 
-    IdeaVim binding: nmap gd :action UsagePreview.ShowUsagesWithPreview<CR>
+    IdeaVim bindings:
+    - nmap gd :action UsagePreview.ShowUsagesWithPreview<CR>  (go to definition, or show usages if on definition)
+    - nmap gu :action UsagePreview.ShowUsagesAlways<CR>  (always show usages popup)
     ]]></description>
 
     <depends>com.intellij.modules.lang</depends>
@@ -16,7 +18,13 @@
         <action id="UsagePreview.ShowUsagesWithPreview"
                 class="com.example.usagepreview.ShowUsagesWithPreviewAction"
                 text="Show Usages with Preview"
-                description="Show usages of the symbol at caret with a syntax-highlighted preview panel">
+                description="Go to definition, or show usages popup if already on the definition">
+        </action>
+
+        <action id="UsagePreview.ShowUsagesAlways"
+                class="com.example.usagepreview.ShowUsagesAlwaysAction"
+                text="Show Usages Always"
+                description="Show usages popup for the symbol at caret regardless of context">
         </action>
     </actions>
 </idea-plugin>

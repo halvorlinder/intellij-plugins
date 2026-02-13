@@ -2,7 +2,6 @@ package com.example.usagepreview
 
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.LogicalPosition
-import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.markup.HighlighterLayer
@@ -115,9 +114,11 @@ class UsagePreviewPanel(
         // Remove old highlights
         editor.markupModel.removeAllHighlighters()
 
-        // Scroll to line
+        // Scroll to line (no animation)
         val safeLine = line.coerceIn(0, editor.document.lineCount - 1)
-        editor.scrollingModel.scrollTo(LogicalPosition(safeLine, 0), ScrollType.CENTER)
+        editor.scrollingModel.disableAnimation()
+        editor.scrollingModel.scrollTo(LogicalPosition(safeLine, 0), com.intellij.openapi.editor.ScrollType.CENTER)
+        editor.scrollingModel.enableAnimation()
 
         // Highlight the usage line
         val lineStart = editor.document.getLineStartOffset(safeLine)

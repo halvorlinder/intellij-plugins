@@ -21,7 +21,7 @@ When the user describes a problem or desired behavior:
 | `maven-context-runner` | Maven Context Runner | Run Maven goals (verify, test, clean, spotless:apply) on the module containing the current file. All commands except Spotless Apply run spotless:apply first. Shortcuts: Option+V, Option+T, Option+C, Option+F. |
 | `kotlin-type-info` | Kotlin Type Info | Show fully resolved type info for Kotlin expressions (substitutes generic type parameters). Bind via IdeaVim: `nmap gH :action KotlinTypeInfo.ShowResolvedTypeInfo<CR>`. |
 | `vscode-window` | VSCode Window | VSCode-like window management: Cmd+0 focus project tree, Cmd+1/2/3 focus editor groups by position, Cmd+B/J toggle side/bottom panels with memory, Cmd+\ split and move file right, Cmd+Shift+\ equalize split widths, Space/Option+Space to preview files and toggle folders in project tree. |
-| `usage-preview` | Usage Preview | Show usages with syntax-highlighted editor preview. Dual-pane popup: usage list (left) + live editor preview (right). Bind via IdeaVim: `nmap gd :action UsagePreview.ShowUsagesWithPreview<CR>`. |
+| `usage-preview` | Usage Preview | Show usages with syntax-highlighted editor preview. Dual-pane popup: usage list (left) + live editor preview (right). IdeaVim: `gd` go-to-definition/show usages, `gu` always show usages. |
 
 ## Build Stack
 

@@ -8,6 +8,7 @@ A collection of custom IntelliJ IDEA plugins.
 | [maven-context-runner](maven-context-runner/) | Run Maven goals on the module containing the current file via keyboard shortcuts |
 | [kotlin-type-info](kotlin-type-info/) | Show fully resolved type info for Kotlin expressions with substituted generic type parameters |
 | [vscode-window](vscode-window/) | VSCode-like window and panel management with keyboard shortcuts |
+| [usage-preview](usage-preview/) | Show usages with a syntax-highlighted editor preview popup |
 
 ## Requirements
 

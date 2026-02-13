@@ -42,6 +42,7 @@ class UsagePreviewPanel(
 
         val listScroll = JBScrollPane(list)
         listScroll.minimumSize = Dimension(280, 0)
+        listScroll.horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
 
         // Right pane: editor preview container
         previewContainer = JPanel(BorderLayout())
@@ -93,6 +94,7 @@ class UsagePreviewPanel(
         settings.additionalLinesCount = 0
         settings.isCaretRowShown = false
         settings.isRightMarginShown = false
+        settings.isUseSoftWraps = false
 
         editor.colorsScheme = EditorColorsManager.getInstance().globalScheme
 
@@ -120,13 +122,29 @@ class UsagePreviewPanel(
         editor.scrollingModel.scrollTo(LogicalPosition(safeLine, 0), com.intellij.openapi.editor.ScrollType.CENTER)
         editor.scrollingModel.enableAnimation()
 
-        // Highlight the usage line
+        // Highlight the usage line with a visible color
         val lineStart = editor.document.getLineStartOffset(safeLine)
         val lineEnd = editor.document.getLineEndOffset(safeLine)
         val scheme = EditorColorsManager.getInstance().globalScheme
-        val caretRowColor = scheme.getColor(EditorColors.CARET_ROW_COLOR)
+        val baseColor = scheme.getColor(EditorColors.CARET_ROW_COLOR) ?: editor.colorsScheme.defaultBackground
+        // Make it noticeably brighter/darker than caret row
+        val highlightColor = if (baseColor.red + baseColor.green + baseColor.blue > 382) {
+            // Light theme — darken
+            java.awt.Color(
+                (baseColor.red * 0.85).toInt().coerceIn(0, 255),
+                (baseColor.green * 0.88).toInt().coerceIn(0, 255),
+                (baseColor.blue * 0.80).toInt().coerceIn(0, 255)
+            )
+        } else {
+            // Dark theme — lighten
+            java.awt.Color(
+                (baseColor.red + (255 - baseColor.red) * 0.15).toInt().coerceIn(0, 255),
+                (baseColor.green + (255 - baseColor.green) * 0.12).toInt().coerceIn(0, 255),
+                (baseColor.blue + (255 - baseColor.blue) * 0.20).toInt().coerceIn(0, 255)
+            )
+        }
         val attributes = TextAttributes().apply {
-            backgroundColor = caretRowColor
+            backgroundColor = highlightColor
         }
 
         editor.markupModel.addRangeHighlighter(
@@ -154,24 +172,11 @@ class UsagePreviewPanel(
         private val panel = JPanel(BorderLayout(4, 0))
         private val iconLabel = JLabel()
         private val textLabel = JLabel()
-        private val lineTextLabel = JLabel()
 
         init {
-            panel.border = BorderFactory.createEmptyBorder(2, 4, 2, 4)
-            val topRow = JPanel(BorderLayout(4, 0))
-            topRow.isOpaque = false
-            topRow.add(iconLabel, BorderLayout.WEST)
-            topRow.add(textLabel, BorderLayout.CENTER)
-
-            val wrapper = JPanel()
-            wrapper.layout = BoxLayout(wrapper, BoxLayout.Y_AXIS)
-            wrapper.isOpaque = false
-            topRow.alignmentX = Component.LEFT_ALIGNMENT
-            lineTextLabel.alignmentX = Component.LEFT_ALIGNMENT
-            wrapper.add(topRow)
-            wrapper.add(lineTextLabel)
-
-            panel.add(wrapper, BorderLayout.CENTER)
+            panel.border = BorderFactory.createEmptyBorder(1, 4, 1, 4)
+            panel.add(iconLabel, BorderLayout.WEST)
+            panel.add(textLabel, BorderLayout.CENTER)
         }
 
         override fun getListCellRendererComponent(
@@ -184,23 +189,26 @@ class UsagePreviewPanel(
             val fileType = FileTypeManager.getInstance().getFileTypeByFileName(value.virtualFile.name)
             iconLabel.icon = fileType.icon
 
-            textLabel.text = value.presentableText
+            val trimmedLine = value.lineText.let { if (it.length > 60) it.take(60) + "..." else it }
+            textLabel.text = "${value.presentableText}  $trimmedLine"
             textLabel.font = list.font
-
-            val trimmedLine = value.lineText.let { if (it.length > 80) it.take(80) + "..." else it }
-            lineTextLabel.text = trimmedLine
-            lineTextLabel.font = list.font.deriveFont(list.font.size2D - 1f)
+            // Ensure text gets clipped with ellipsis rather than expanding the cell
+            textLabel.minimumSize = Dimension(0, textLabel.preferredSize.height)
 
             if (isSelected) {
                 panel.background = list.selectionBackground
                 textLabel.foreground = list.selectionForeground
-                lineTextLabel.foreground = list.selectionForeground
             } else {
                 panel.background = list.background
                 textLabel.foreground = list.foreground
-                lineTextLabel.foreground = java.awt.Color.GRAY
             }
             panel.isOpaque = true
+
+            // Constrain panel width so it doesn't expand beyond the list viewport
+            val listWidth = list.visibleRect.width
+            if (listWidth > 0) {
+                panel.preferredSize = Dimension(listWidth, panel.preferredSize.height)
+            }
 
             return panel
         }

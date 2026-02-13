@@ -208,7 +208,6 @@ private fun showPopup(project: Project, usages: List<UsageItem>) {
 
     popup = JBPopupFactory.getInstance()
         .createComponentPopupBuilder(panel, panel.list)
-        .setTitle("Usages (${usages.size})")
         .setMovable(true)
         .setResizable(true)
         .setRequestFocus(true)

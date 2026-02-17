@@ -1,0 +1,29 @@
+<idea-plugin>
+    <id>com.example.commandpalette</id>
+    <name>Command Palette</name>
+    <vendor>Your Name</vendor>
+    <description><![CDATA[
+    VSCode-like command palette for IntelliJ IDEA.
+    Opens with empty search, shows recent commands first, and filters both recent and all actions as you type.
+    Multi-token search: "git push" matches actions containing both "git" and "push" in any order.
+
+    Default keyboard shortcut:
+    - Cmd+Shift+P: Open Command Palette
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.example.commandpalette.RecentCommandsService"/>
+    </extensions>
+
+    <actions>
+        <action id="CommandPalette.Open"
+                class="com.example.commandpalette.OpenCommandPaletteAction"
+                text="Open Command Palette"
+                description="Open VSCode-like command palette">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta shift P"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta shift P"/>
+        </action>
+    </actions>
+</idea-plugin>

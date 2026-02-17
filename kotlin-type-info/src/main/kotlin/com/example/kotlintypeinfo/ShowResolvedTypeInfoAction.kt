@@ -60,9 +60,7 @@ class ShowResolvedTypeInfoAction : AnAction() {
         ApplicationManager.getApplication().executeOnPooledThread {
             val html = ReadAction.compute<String?, Throwable> {
                 analyze(ktElement) {
-                    tryResolveCall(leafElement)
-                        ?: tryResolveReference(leafElement)
-                        ?: tryExpressionType(leafElement)
+                    resolveAtCursor(leafElement)
                 }
             }
             if (html != null) {
@@ -76,41 +74,29 @@ class ShowResolvedTypeInfoAction : AnAction() {
 
     // ── Resolution ──────────────────────────────────────────────
 
-    private fun KaSession.tryResolveCall(element: PsiElement): String? {
-        val callExpr = PsiTreeUtil.getParentOfType(element, KtCallExpression::class.java, false)
-            ?: PsiTreeUtil.getParentOfType(element, KtDotQualifiedExpression::class.java, false)
-            ?: PsiTreeUtil.getParentOfType(element, KtBinaryExpression::class.java, false)
-            ?: PsiTreeUtil.getParentOfType(element, KtUnaryExpression::class.java, false)
-            ?: return null
+    private fun KaSession.resolveAtCursor(element: PsiElement): String? {
+        // Resolve the reference directly at the cursor, not a parent expression
+        val refExpr = PsiTreeUtil.getParentOfType(element, KtReferenceExpression::class.java, false)
+        if (refExpr != null) {
+            // Try as function call (gives type-substituted signatures)
+            val funcCall = refExpr.resolveToCall()?.successfulFunctionCallOrNull()
+            if (funcCall != null) return renderFunctionCall(funcCall)
 
-        val exprToResolve: KtElement = if (callExpr is KtDotQualifiedExpression) {
-            callExpr.selectorExpression ?: callExpr
-        } else {
-            callExpr
+            // Try as symbol reference (property, variable, etc.)
+            val symbol = refExpr.mainReference.resolveToSymbol()
+            if (symbol is KaCallableSymbol) return renderCallableSymbol(symbol)
         }
 
-        val funcCall = exprToResolve.resolveToCall()?.successfulFunctionCallOrNull()
-            ?: callExpr.resolveToCall()?.successfulFunctionCallOrNull()
-            ?: return null
+        // Handle declarations (cursor on name in val/var/fun/parameter)
+        val callable = PsiTreeUtil.getParentOfType(element, KtCallableDeclaration::class.java, false)
+        if (callable != null && callable.nameIdentifier?.textRange?.contains(element.textRange) == true) {
+            val symbol = callable.symbol as? KaCallableSymbol
+            if (symbol != null) return renderCallableSymbol(symbol)
+        }
 
-        return renderFunctionCall(funcCall)
-    }
-
-    private fun KaSession.tryResolveReference(element: PsiElement): String? {
-        val refExpr = PsiTreeUtil.getParentOfType(element, KtReferenceExpression::class.java)
-            ?: return null
-
-        val funcCall = refExpr.resolveToCall()?.successfulFunctionCallOrNull()
-        if (funcCall != null) return renderFunctionCall(funcCall)
-
-        val symbol = refExpr.mainReference.resolveToSymbol()
-        if (symbol is KaCallableSymbol) return renderCallableSymbol(symbol)
-
-        return null
-    }
-
-    private fun KaSession.tryExpressionType(element: PsiElement): String? {
+        // Fall back to expression type (skip declarations which return Unit)
         val expression = PsiTreeUtil.getParentOfType(element, KtExpression::class.java) ?: return null
+        if (expression is KtDeclaration) return null
         val type = expression.expressionType ?: return null
         return styledType(renderType(type))
     }

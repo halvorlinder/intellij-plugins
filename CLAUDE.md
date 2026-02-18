@@ -23,6 +23,7 @@ When the user describes a problem or desired behavior:
 | `vscode-window` | VSCode Window | VSCode-like window management: Cmd+0 focus project tree, Cmd+1/2/3 focus editor groups by position, Cmd+B/J toggle side/bottom panels with memory, Cmd+\ split and move file right, Cmd+Shift+\ equalize split widths, Space/Option+Space to preview files and toggle folders in project tree. |
 | `usage-preview` | Usage Preview | Show usages with syntax-highlighted editor preview. Dual-pane popup: usage list (left) + live editor preview (right). IdeaVim: `gd` go-to-definition/show usages, `gu` always show usages. |
 | `command-palette` | Command Palette | VSCode-like command palette: opens with empty search, shows recent commands first, multi-token filtering. Shortcut: Cmd+Shift+P. |
+| `compile-errors` | Compile Errors | Show compilation errors in a navigable dual-pane popup with editor preview. Triggers project build and updates live. Shortcut: Option+E. |
 
 ## Build Stack
 

@@ -18,6 +18,7 @@ dependencies {
     intellijPlatform {
         intellijIdeaUltimate(providers.gradleProperty("platformVersion"))
         instrumentationTools()
+        bundledPlugin("com.intellij.java")
     }
 }
 

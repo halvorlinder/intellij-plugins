@@ -1,0 +1,28 @@
+<idea-plugin>
+    <id>com.example.compileerrors</id>
+    <name>Compile Errors</name>
+    <vendor>Your Name</vendor>
+    <description><![CDATA[
+    Show compilation errors in a navigable dual-pane popup with editor preview.
+    Triggers a project build and displays errors/warnings as they arrive.
+
+    Shortcut: Option+E
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="com.example.compileerrors.CompileErrorsCacheService"/>
+    </extensions>
+
+    <actions>
+        <action id="CompileErrors.Show"
+                class="com.example.compileerrors.ShowCompileErrorsAction"
+                text="Show Compile Errors"
+                description="Show compilation errors in a navigable popup with editor preview">
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt E"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt E"/>
+        </action>
+    </actions>
+</idea-plugin>

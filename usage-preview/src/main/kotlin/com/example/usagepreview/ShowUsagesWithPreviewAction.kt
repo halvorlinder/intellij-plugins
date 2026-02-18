@@ -1,16 +1,19 @@
 package com.example.usagepreview
 
+import com.example.sharedui.DualPanePreviewPanel
+import com.example.sharedui.PreviewItem
+import com.example.sharedui.PreviewPopupBuilder
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.popup.JBPopup
-import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.codeInsight.hint.HintManager
 import com.intellij.codeInsight.TargetElementUtil
@@ -18,18 +21,16 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.search.searches.ReferencesSearch
-import java.awt.Dimension
-import java.awt.event.KeyAdapter
-import java.awt.event.KeyEvent
 
 data class UsageItem(
-    val virtualFile: VirtualFile,
-    val line: Int,
+    override val virtualFile: VirtualFile,
+    override val line: Int,
+    override val column: Int,
     val offset: Int,
     val presentableText: String,
     val lineText: String,
     val isDeclaration: Boolean = false
-)
+) : PreviewItem
 
 /**
  * gd action: If on a definition, show usages popup. If on a reference, jump to definition.
@@ -75,7 +76,6 @@ class ShowUsagesWithPreviewAction : AnAction() {
         val psiFile = PsiDocumentManager.getInstance(resolvedElement.project).getPsiFile(editor.document) ?: return false
         val elementAtCaret = psiFile.findElementAt(offset) ?: return false
 
-        // Check if the resolved element's name identifier is at/near the caret
         if (resolvedElement is PsiNameIdentifierOwner) {
             val nameId = resolvedElement.nameIdentifier
             if (nameId != null) {
@@ -84,7 +84,6 @@ class ShowUsagesWithPreviewAction : AnAction() {
             }
         }
 
-        // Fallback: check if resolved element itself contains the caret
         return resolvedElement.textRange.containsOffset(offset) &&
                 resolvedElement.containingFile?.virtualFile ==
                 PsiDocumentManager.getInstance(resolvedElement.project).getPsiFile(editor.document)?.virtualFile
@@ -140,11 +139,12 @@ internal fun findAndShowUsages(project: Project, editor: Editor, element: PsiEle
                     val declLine = declDoc.getLineNumber(declOffset)
                     val lineStart = declDoc.getLineStartOffset(declLine)
                     val lineEnd = declDoc.getLineEndOffset(declLine)
-                    val lineText = declDoc.getText(com.intellij.openapi.util.TextRange(lineStart, lineEnd)).trim()
+                    val lineText = declDoc.getText(TextRange(lineStart, lineEnd)).trim()
                     usages.add(
                         UsageItem(
                             virtualFile = declFile,
                             line = declLine,
+                            column = 0,
                             offset = declOffset,
                             presentableText = "${declFile.name}:${declLine + 1} (declaration)",
                             lineText = lineText,
@@ -171,11 +171,12 @@ internal fun findAndShowUsages(project: Project, editor: Editor, element: PsiEle
                     val line = doc.getLineNumber(offset)
                     val lineStart = doc.getLineStartOffset(line)
                     val lineEnd = doc.getLineEndOffset(line)
-                    val lineText = doc.getText(com.intellij.openapi.util.TextRange(lineStart, lineEnd)).trim()
+                    val lineText = doc.getText(TextRange(lineStart, lineEnd)).trim()
                     usages.add(
                         UsageItem(
                             virtualFile = file,
                             line = line,
+                            column = 0,
                             offset = offset,
                             presentableText = "${file.name}:${line + 1}",
                             lineText = lineText
@@ -185,13 +186,13 @@ internal fun findAndShowUsages(project: Project, editor: Editor, element: PsiEle
             }
 
             if (usages.isEmpty()) {
-                com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                ApplicationManager.getApplication().invokeLater {
                     HintManager.getInstance().showErrorHint(editor, "No usages found")
                 }
                 return
             }
 
-            com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().invokeLater {
                 showPopup(project, usages)
             }
         }
@@ -199,40 +200,13 @@ internal fun findAndShowUsages(project: Project, editor: Editor, element: PsiEle
 }
 
 private fun showPopup(project: Project, usages: List<UsageItem>) {
-    var popup: JBPopup? = null
+    val panel = DualPanePreviewPanel(project, usages, UsageCellRenderer())
 
-    val panel = UsagePreviewPanel(project, usages) { usage ->
-        popup?.cancel()
-        OpenFileDescriptor(project, usage.virtualFile, usage.line, 0).navigate(true)
-    }
-
-    popup = JBPopupFactory.getInstance()
-        .createComponentPopupBuilder(panel, panel.list)
-        .setMovable(true)
-        .setResizable(true)
-        .setRequestFocus(true)
-        .setFocusable(true)
-        .setCancelOnClickOutside(true)
-        .setCancelOnOtherWindowOpen(true)
-        .setCancelKeyEnabled(true)
-        .setMinSize(Dimension(700, 400))
-        .setCancelCallback {
-            panel.dispose()
-            true
+    PreviewPopupBuilder.show(
+        project,
+        panel,
+        onNavigate = { usage ->
+            OpenFileDescriptor(project, usage.virtualFile, usage.line, 0).navigate(true)
         }
-        .createPopup()
-
-    // Add Enter key handler to the list
-    panel.list.addKeyListener(object : KeyAdapter() {
-        override fun keyPressed(e: KeyEvent) {
-            if (e.keyCode == KeyEvent.VK_ENTER) {
-                val selected = panel.list.selectedValue ?: return
-                popup.cancel()
-                OpenFileDescriptor(project, selected.virtualFile, selected.line, 0).navigate(true)
-            }
-        }
-    })
-
-    // Show centered in the IDE window
-    popup.showCenteredInCurrentWindow(project)
+    )
 }

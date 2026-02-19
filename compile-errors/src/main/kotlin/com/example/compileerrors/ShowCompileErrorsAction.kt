@@ -88,7 +88,7 @@ class ShowCompileErrorsAction : AnAction() {
         val configSettings = MavenRunConfigurationType.createRunnerAndConfigurationSettings(
             null,
             null,
-            MavenRunnerParameters(true, workingDir, null as String?, listOf("spotless:apply", "compile"), emptyList()),
+            MavenRunnerParameters(true, workingDir, null as String?, listOf("spotless:apply", "test-compile"), emptyList()),
             project
         )
 

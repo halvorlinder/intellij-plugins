@@ -30,6 +30,7 @@ class MavenExecutionListener(private val project: Project) : ExecutionListener {
         val output = StringBuilder()
         trackedHandlers[handler] = output
 
+        service.clearModifiedTracking()
         service.isRunning = true
         service.notifyListeners()
 

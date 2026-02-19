@@ -15,6 +15,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.example.compileerrors.MavenErrorCacheService"/>
+        <projectService serviceImplementation="com.example.compileerrors.CompileErrorsSettings"/>
     </extensions>
 
     <projectListeners>

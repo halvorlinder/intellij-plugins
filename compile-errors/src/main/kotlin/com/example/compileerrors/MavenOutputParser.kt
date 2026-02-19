@@ -59,7 +59,7 @@ object MavenOutputParser {
             val parsed = tryMatchCompilerError(line) ?: tryMatchSpotlessError(line, filePathMap) ?: continue
             val virtualFile = fileSystem.findFileByPath(parsed.filePath) ?: continue
             // Deduplicate (Maven sometimes prints errors twice: once inline, once in summary)
-            val key = "${parsed.filePath}:${parsed.line}:${parsed.message}"
+            val key = "${parsed.filePath}:${parsed.line}"
             if (!seen.add(key)) continue
             items.add(
                 CompileErrorItem(

@@ -39,14 +39,20 @@ class ShowCompileErrorsAction : AnAction() {
             }
         }
 
+        val settings = CompileErrorsSettings.getInstance(project)
+
+        fun autoResolveTag(): String {
+            return if (settings.autoResolveEnabled) "auto-resolve: on" else "auto-resolve: off"
+        }
+
         fun updateStatus(errors: List<CompileErrorItem>) {
             val errorCount = errors.size
             if (service.isRunning) {
                 panel.setStatusText("compiling...")
             } else if (errorCount == 0) {
-                panel.setStatusText("No errors. Press R to compile")
+                panel.setStatusText("No errors. Press R to compile | ${autoResolveTag()}")
             } else {
-                panel.setStatusText("$errorCount error${if (errorCount != 1) "s" else ""}")
+                panel.setStatusText("$errorCount error${if (errorCount != 1) "s" else ""} | ${autoResolveTag()}")
             }
         }
 
@@ -77,6 +83,10 @@ class ShowCompileErrorsAction : AnAction() {
             override fun keyPressed(e: KeyEvent) {
                 if (e.keyCode == KeyEvent.VK_R) {
                     triggerMavenCompile(project, currentFile)
+                } else if (e.keyCode == KeyEvent.VK_T) {
+                    settings.autoResolveEnabled = !settings.autoResolveEnabled
+                    val errors = service.errors.filter { it.severity == ErrorSeverity.ERROR }
+                    updateStatus(errors)
                 }
             }
         })

@@ -11,8 +11,9 @@ When the user describes a problem or desired behavior:
 1. **Decide** which existing plugin to modify — or create a new plugin if none fits
 2. **Implement** the changes (Kotlin, IntelliJ Platform SDK)
 3. **Build only** using `cd <plugin-dir> && ./gradlew buildPlugin` to verify compilation
-4. **Commit** the changes
-5. **Never install** — the user handles installation from a separate window
+4. **Update docs** — update the plugin tables in both `CLAUDE.md` and `README.md` if you changed plugin behavior, shortcuts, or added/removed a plugin
+5. **Commit** the changes
+6. **Never install** — the user handles installation from a separate window
 
 ## Existing Plugins
 
@@ -25,6 +26,7 @@ When the user describes a problem or desired behavior:
 | `usage-preview` | Usage Preview | Show usages with syntax-highlighted editor preview. Dual-pane popup: usage list (left) + live editor preview (right). IdeaVim: `gd` go-to-definition/show usages, `gu` always show usages. |
 | `command-palette` | Command Palette | VSCode-like command palette: opens with empty search, shows recent commands first, multi-token filtering. Shortcut: Cmd+Shift+P. |
 | `compile-errors` | Compile Errors | Show Maven compilation errors in a navigable dual-pane popup with editor preview. Captures errors from any Maven execution automatically. Press R to compile. Shortcut: Option+E. |
+| `shared-ui` | (library) | Shared dual-pane popup UI component used by `compile-errors` and `usage-preview`. Not a standalone plugin. |
 
 ## Build Stack
 
@@ -57,8 +59,8 @@ The install scripts copy the built plugin to:
 3. Update `gradle.properties` with new pluginGroup, pluginName, pluginVersion
 4. Adjust `build.gradle.kts` dependencies (bundledPlugin entries) as needed
 5. Create source files under `src/main/kotlin/` and `src/main/resources/META-INF/plugin.xml`
-6. Test with `./install-plugin.sh <new-plugin-dir>`
-7. Update this table in CLAUDE.md
+6. Test with `cd <new-plugin-dir> && ./gradlew buildPlugin`
+7. Update the plugin tables in both `CLAUDE.md` and `README.md`
 
 ## Key Conventions
 

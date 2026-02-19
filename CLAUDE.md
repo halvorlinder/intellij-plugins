@@ -10,8 +10,9 @@ When the user describes a problem or desired behavior:
 
 1. **Decide** which existing plugin to modify — or create a new plugin if none fits
 2. **Implement** the changes (Kotlin, IntelliJ Platform SDK)
-3. **Build & install** using `./install-plugin.sh <plugin-dir>`
+3. **Build only** using `cd <plugin-dir> && ./gradlew buildPlugin` to verify compilation
 4. **Commit** the changes
+5. **Never install** — the user handles installation from a separate window
 
 ## Existing Plugins
 
@@ -72,6 +73,11 @@ The install scripts copy the built plugin to:
 - Remote: `git@github.com-halvorlinder:halvorlinder/intellij-plugins.git`
 - Always commit after successful build+install verification
 - This repo uses **bare worktrees**. The `main` branch is checked out at `/Users/halvorlinder/Programming/IntelliJPlugins/main`, and feature branches are checked out in sibling directories (e.g., this directory is the `feature/command-palette` worktree). You **cannot** `git checkout main` from a feature worktree.
+- **Before starting work**, rebase your feature branch on main to pick up the latest changes:
+  ```bash
+  git fetch origin
+  git rebase origin/main
+  ```
 - To merge a feature branch into main and push:
   ```bash
   git -C /Users/halvorlinder/Programming/IntelliJPlugins/main merge <branch-name>

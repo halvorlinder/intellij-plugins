@@ -56,9 +56,8 @@ echo "==> Converting to bare repo with worktrees..."
 mv .git .bare
 echo "gitdir: .bare" > .git
 
-# Configure the bare repo
-git config core.bare false
-git config core.worktree "$REPO_ROOT"
+# Configure as truly bare (no default working tree)
+git config core.bare true
 
 echo "    Moved .git/ → .bare/ and created .git pointer file"
 
@@ -90,8 +89,8 @@ for f in CLAUDE.md README.md .gitignore .claude; do
   fi
 done
 
-# Now create the main worktree
-git worktree add main main 2>/dev/null || git worktree add main HEAD
+# Now create the main worktree (on the main branch)
+git worktree add main main
 
 # The worktree command checked out all files into main/. Remove the duplicates
 # we moved to temp.
@@ -137,6 +136,15 @@ for item in $(ls -A); do
   fi
   # Remove leftover files/dirs that aren't worktrees or infrastructure
   rm -rf "$item"
+done
+
+# ── Step 5: Copy workspace scripts to top level ───────────────────────────────
+
+# The scripts are tracked in git, so they live inside worktrees. Copy them to
+# the top level so they're accessible without cd-ing into a worktree.
+for script in plugins-tmux.sh plugin-window.sh plugin-worktree.sh setup-bare-worktrees.sh; do
+  cp "main/$script" "$script" 2>/dev/null || true
+  chmod +x "$script" 2>/dev/null || true
 done
 
 echo ""

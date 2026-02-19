@@ -3,24 +3,30 @@
     <name>Compile Errors</name>
     <vendor>Your Name</vendor>
     <description><![CDATA[
-    Show compilation errors in a navigable dual-pane popup with editor preview.
-    Triggers a project build and displays errors/warnings as they arrive.
+    Show Maven compilation errors in a navigable dual-pane popup with editor preview.
+    Captures errors from any Maven execution (maven-context-runner, Maven tool window, run configurations).
+    Press R in the popup to trigger mvn compile on the current module.
 
     Shortcut: Option+E
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.idea.maven</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="com.example.compileerrors.CompileErrorsCacheService"/>
+        <projectService serviceImplementation="com.example.compileerrors.MavenErrorCacheService"/>
     </extensions>
+
+    <projectListeners>
+        <listener class="com.example.compileerrors.MavenExecutionListener"
+                  topic="com.intellij.execution.ExecutionListener"/>
+    </projectListeners>
 
     <actions>
         <action id="CompileErrors.Show"
                 class="com.example.compileerrors.ShowCompileErrorsAction"
                 text="Show Compile Errors"
-                description="Show compilation errors in a navigable popup with editor preview">
+                description="Show Maven compilation errors in a navigable popup with editor preview">
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt E"/>
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="alt E"/>
         </action>

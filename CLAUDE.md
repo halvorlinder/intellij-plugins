@@ -18,12 +18,12 @@ When the user describes a problem or desired behavior:
 | Directory | Plugin | Description |
 |---|---|---|
 | `git-file-checkout` | Git File Checkout | Check out a single file from any branch/commit without switching branches. Replaces the file in-place as an unstaged change (Cmd+Z to undo). |
-| `maven-context-runner` | Maven Context Runner | Run Maven goals (verify, test, clean, spotless:apply) on the module containing the current file. All commands except Spotless Apply run spotless:apply first. Shortcuts: Option+V, Option+T, Option+C, Option+F. |
+| `maven-context-runner` | Maven Context Runner | Run Maven goals (verify, test, clean, compile, spotless:apply) on the module containing the current file. All commands except Spotless Apply and Compile run spotless:apply first. Shortcuts: Option+V, Option+T, Option+C, Option+F, Option+B. |
 | `kotlin-type-info` | Kotlin Type Info | Show fully resolved type info for Kotlin expressions (substitutes generic type parameters). Bind via IdeaVim: `nmap gH :action KotlinTypeInfo.ShowResolvedTypeInfo<CR>`. |
 | `vscode-window` | VSCode Window | VSCode-like window management: Cmd+0 focus project tree, Cmd+1/2/3 focus editor groups by position, Cmd+B/J toggle side/bottom panels with memory, Cmd+\ split and move file right, Cmd+Shift+\ equalize split widths, Space/Option+Space to preview files and toggle folders in project tree. |
 | `usage-preview` | Usage Preview | Show usages with syntax-highlighted editor preview. Dual-pane popup: usage list (left) + live editor preview (right). IdeaVim: `gd` go-to-definition/show usages, `gu` always show usages. |
 | `command-palette` | Command Palette | VSCode-like command palette: opens with empty search, shows recent commands first, multi-token filtering. Shortcut: Cmd+Shift+P. |
-| `compile-errors` | Compile Errors | Show compilation errors in a navigable dual-pane popup with editor preview. Triggers project build and updates live. Shortcut: Option+E. |
+| `compile-errors` | Compile Errors | Show Maven compilation errors in a navigable dual-pane popup with editor preview. Captures errors from any Maven execution automatically. Press R to compile. Shortcut: Option+E. |
 
 ## Build Stack
 

@@ -1,7 +1,6 @@
 package com.example.compileerrors
 
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.compiler.CompilerMessageCategory
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
@@ -25,10 +24,9 @@ class CompileErrorsCellRenderer : ListCellRenderer<CompileErrorItem> {
         isSelected: Boolean,
         cellHasFocus: Boolean
     ): Component {
-        iconLabel.icon = when (value.category) {
-            CompilerMessageCategory.ERROR -> AllIcons.General.Error
-            CompilerMessageCategory.WARNING -> AllIcons.General.Warning
-            else -> AllIcons.General.Information
+        iconLabel.icon = when (value.severity) {
+            ErrorSeverity.ERROR -> AllIcons.General.Error
+            ErrorSeverity.WARNING -> AllIcons.General.Warning
         }
 
         val fileName = value.virtualFile.name

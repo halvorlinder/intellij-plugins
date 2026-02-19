@@ -117,3 +117,4 @@ class MavenVerifyAction : RunMavenGoalAction("verify", "Maven Verify", runSpotle
 class MavenTestAction : RunMavenGoalAction("test", "Maven Test", runSpotlessFirst = true)
 class MavenCleanAction : RunMavenGoalAction("clean", "Maven Clean", runSpotlessFirst = true)
 class SpotlessApplyAction : RunMavenGoalAction("spotless:apply", "Spotless Apply")
+class MavenCompileAction : RunMavenGoalAction("compile", "Maven Compile", runSpotlessFirst = true)

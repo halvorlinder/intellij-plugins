@@ -3,7 +3,7 @@
     <name>Maven Context Runner</name>
     <vendor>Your Name</vendor>
     <description><![CDATA[
-    Run Maven goals (verify, test, clean, spotless:apply) for the module containing the current file.
+    Run Maven goals (verify, test, clean, compile, spotless:apply) for the module containing the current file.
     All commands (except Spotless Apply) run spotless:apply first.
 
     Default keyboard shortcuts:
@@ -11,6 +11,7 @@
     - Option+T: Maven Test
     - Option+C: Maven Clean
     - Option+F: Spotless Apply
+    - Option+B: Maven Compile
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -53,6 +54,15 @@
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt F"/>
         </action>
 
+        <action id="MavenContextRunner.Compile"
+                class="com.example.mavencontextrunner.MavenCompileAction"
+                text="Maven Compile (Current Module)"
+                description="Run mvn compile for the module containing the current file">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt B"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt B"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt B"/>
+        </action>
+
         <!-- Add to Tools menu for discoverability -->
         <group id="MavenContextRunner.Menu" text="Maven Context Runner" popup="true">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
@@ -60,6 +70,7 @@
             <reference ref="MavenContextRunner.Test"/>
             <reference ref="MavenContextRunner.Clean"/>
             <reference ref="MavenContextRunner.SpotlessApply"/>
+            <reference ref="MavenContextRunner.Compile"/>
         </group>
     </actions>
 </idea-plugin>

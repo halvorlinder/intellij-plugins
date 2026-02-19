@@ -213,7 +213,7 @@ class CommandPalettePopup(private val originalEvent: AnActionEvent) {
         result: MutableMap<String, String>
     ) {
         val children = try {
-            group.getChildren(null)
+            if (group is DefaultActionGroup) group.getChildActionsOrStubs() else group.getChildren(null)
         } catch (_: Exception) {
             return
         }

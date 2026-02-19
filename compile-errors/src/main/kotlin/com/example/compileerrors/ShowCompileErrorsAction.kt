@@ -16,7 +16,6 @@ import org.jetbrains.idea.maven.execution.MavenRunConfigurationType
 import org.jetbrains.idea.maven.execution.MavenRunnerParameters
 import org.jetbrains.idea.maven.project.MavenProjectsManager
 import java.awt.Color
-import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 
 class ShowCompileErrorsAction : AnAction() {
@@ -31,13 +30,18 @@ class ShowCompileErrorsAction : AnAction() {
         val panel = DualPanePreviewPanel(
             project,
             initialErrors,
-            CompileErrorsCellRenderer()
-        ) { item ->
-            when (item.severity) {
-                ErrorSeverity.ERROR -> Color(80, 0, 0, 40)
-                ErrorSeverity.WARNING -> Color(80, 70, 0, 40)
+            CompileErrorsCellRenderer(),
+            highlightColorProvider = { item ->
+                when (item.severity) {
+                    ErrorSeverity.ERROR -> Color(80, 0, 0, 40)
+                    ErrorSeverity.WARNING -> Color(80, 70, 0, 40)
+                }
+            },
+            treeItemText = { item ->
+                val msg = item.message.let { if (it.length > 60) it.take(60) + "..." else it }
+                "L${item.line + 1}: $msg"
             }
-        }
+        )
 
         val settings = CompileErrorsSettings.getInstance(project)
 
@@ -79,17 +83,19 @@ class ShowCompileErrorsAction : AnAction() {
             }
         )
 
-        panel.list.addKeyListener(object : KeyAdapter() {
-            override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_R) {
-                    triggerMavenCompile(project, currentFile)
-                } else if (e.keyCode == KeyEvent.VK_T) {
-                    settings.autoResolveEnabled = !settings.autoResolveEnabled
-                    val errors = service.errors.filter { it.severity == ErrorSeverity.ERROR }
-                    updateStatus(errors)
-                }
+        panel.addKeyHandler { keyEvent ->
+            if (keyEvent.keyCode == KeyEvent.VK_R) {
+                triggerMavenCompile(project, currentFile)
+                true
+            } else if (keyEvent.keyCode == KeyEvent.VK_A) {
+                settings.autoResolveEnabled = !settings.autoResolveEnabled
+                val errors = service.errors.filter { it.severity == ErrorSeverity.ERROR }
+                updateStatus(errors)
+                true
+            } else {
+                false
             }
-        })
+        }
     }
 
     private fun triggerMavenCompile(project: Project, currentFile: VirtualFile?) {

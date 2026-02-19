@@ -8,6 +8,9 @@ Show usages of a symbol with a syntax-highlighted editor preview. A dual-pane po
 - **gu** (go to usages): Always shows the usages popup regardless of whether the caret is on a definition or reference.
 - Syntax-highlighted read-only editor preview that updates as you navigate the list
 - Usage line is highlighted in the preview
+- Declaration line distinguished with green color in the list and a distinct highlight in the preview
+- **T** toggles between flat list and tree view (folder → file → location hierarchy)
+- **Space** expands/collapses folders and files in tree view
 - Enter navigates to the selected usage, Escape closes the popup
 
 ## IdeaVim Setup

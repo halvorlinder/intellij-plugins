@@ -9,7 +9,7 @@ A collection of custom IntelliJ IDEA plugins.
 | [git-file-checkout](git-file-checkout/) | Check out a single file from any branch or commit without switching branches |
 | [kotlin-type-info](kotlin-type-info/) | Show fully resolved type info for Kotlin expressions with substituted generic type parameters |
 | [maven-context-runner](maven-context-runner/) | Run Maven goals on the module containing the current file via keyboard shortcuts |
-| [usage-preview](usage-preview/) | Show usages with a syntax-highlighted editor preview popup |
+| [usage-preview](usage-preview/) | Show usages with a syntax-highlighted editor preview popup and tree view |
 | [vscode-window](vscode-window/) | VSCode-like window and panel management with keyboard shortcuts |
 
 [shared-ui](shared-ui/) is a shared library used by `compile-errors` and `usage-preview` for the dual-pane popup UI.

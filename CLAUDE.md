@@ -71,3 +71,9 @@ The install scripts copy the built plugin to:
 
 - Remote: `git@github.com-halvorlinder:halvorlinder/intellij-plugins.git`
 - Always commit after successful build+install verification
+- This repo uses **bare worktrees**. The `main` branch is checked out at `/Users/halvorlinder/Programming/IntelliJPlugins/main`, and feature branches are checked out in sibling directories (e.g., this directory is the `feature/command-palette` worktree). You **cannot** `git checkout main` from a feature worktree.
+- To merge a feature branch into main and push:
+  ```bash
+  git -C /Users/halvorlinder/Programming/IntelliJPlugins/main merge <branch-name>
+  git -C /Users/halvorlinder/Programming/IntelliJPlugins/main push
+  ```

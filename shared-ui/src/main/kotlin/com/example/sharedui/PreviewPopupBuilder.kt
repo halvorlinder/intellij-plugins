@@ -4,7 +4,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import java.awt.Dimension
-import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 
 object PreviewPopupBuilder {
@@ -12,7 +11,7 @@ object PreviewPopupBuilder {
     fun <T : PreviewItem> show(
         project: Project,
         panel: DualPanePreviewPanel<T>,
-        minSize: Dimension = Dimension(700, 400),
+        minSize: Dimension = Dimension(1000, 600),
         onNavigate: (T) -> Unit,
         onCancel: (() -> Unit)? = null
     ): JBPopup {
@@ -35,15 +34,14 @@ object PreviewPopupBuilder {
             }
             .createPopup()
 
-        panel.list.addKeyListener(object : KeyAdapter() {
-            override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_ENTER) {
-                    val selected = panel.list.selectedValue ?: return
-                    popup.cancel()
-                    onNavigate(selected)
-                }
-            }
-        })
+        panel.addKeyHandler { e ->
+            if (e.keyCode == KeyEvent.VK_ENTER) {
+                val selected = panel.selectedItem ?: return@addKeyHandler false
+                popup.cancel()
+                onNavigate(selected)
+                true
+            } else false
+        }
 
         popup.showCenteredInCurrentWindow(project)
         return popup

@@ -21,6 +21,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.search.searches.ReferencesSearch
+import java.awt.Color
 
 data class UsageItem(
     override val virtualFile: VirtualFile,
@@ -146,7 +147,7 @@ internal fun findAndShowUsages(project: Project, editor: Editor, element: PsiEle
                             line = declLine,
                             column = 0,
                             offset = declOffset,
-                            presentableText = "${declFile.name}:${declLine + 1} (declaration)",
+                            presentableText = "${declFile.name}:${declLine + 1}",
                             lineText = lineText,
                             isDeclaration = true
                         )
@@ -200,7 +201,19 @@ internal fun findAndShowUsages(project: Project, editor: Editor, element: PsiEle
 }
 
 private fun showPopup(project: Project, usages: List<UsageItem>) {
-    val panel = DualPanePreviewPanel(project, usages, UsageCellRenderer())
+    val panel = DualPanePreviewPanel(
+        project,
+        usages,
+        UsageCellRenderer(),
+        highlightColorProvider = { item ->
+            if (item.isDeclaration) Color(30, 100, 30, 50) else null
+        },
+        treeItemText = { item ->
+            val text = item.lineText.let { if (it.length > 50) it.take(50) + "..." else it }
+            "L${item.line + 1}: $text"
+        },
+        itemMarker = { it.isDeclaration }
+    )
 
     PreviewPopupBuilder.show(
         project,

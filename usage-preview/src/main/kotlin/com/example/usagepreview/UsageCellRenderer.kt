@@ -1,10 +1,14 @@
 package com.example.usagepreview
 
 import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.ui.JBColor
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import javax.swing.*
+
+private val DECLARATION_COLOR = JBColor(Color(0, 128, 0), Color(100, 200, 100))
 
 class UsageCellRenderer : ListCellRenderer<UsageItem> {
     private val panel = JPanel(BorderLayout(4, 0))
@@ -37,7 +41,11 @@ class UsageCellRenderer : ListCellRenderer<UsageItem> {
             textLabel.foreground = list.selectionForeground
         } else {
             panel.background = list.background
-            textLabel.foreground = list.foreground
+            textLabel.foreground = if (value.isDeclaration) {
+                DECLARATION_COLOR
+            } else {
+                list.foreground
+            }
         }
         panel.isOpaque = true
 

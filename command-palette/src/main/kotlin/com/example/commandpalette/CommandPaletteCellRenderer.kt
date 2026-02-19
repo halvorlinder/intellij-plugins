@@ -5,10 +5,13 @@ import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import java.awt.BorderLayout
 import java.awt.Component
+import java.awt.Dimension
 import java.awt.FlowLayout
 import javax.swing.*
 
 class CommandPaletteCellRenderer : ListCellRenderer<PaletteEntry> {
+
+    private val iconWidth = JBUI.scale(20)
 
     override fun getListCellRendererComponent(
         list: JList<out PaletteEntry>,
@@ -18,20 +21,21 @@ class CommandPaletteCellRenderer : ListCellRenderer<PaletteEntry> {
         cellHasFocus: Boolean
     ): Component {
         return when (value) {
-            is PaletteEntry.SectionHeader -> createHeaderPanel(value)
+            is PaletteEntry.SectionHeader -> createHeaderPanel(value, list)
             is PaletteEntry.ActionEntry -> createActionPanel(value, list, isSelected)
         }
     }
 
-    private fun createHeaderPanel(header: PaletteEntry.SectionHeader): JPanel {
+    private fun createHeaderPanel(header: PaletteEntry.SectionHeader, list: JList<out PaletteEntry>): JPanel {
         val label = JLabel(header.title).apply {
-            font = UIUtil.getLabelFont().deriveFont(java.awt.Font.BOLD, UIUtil.getFontSize(UIUtil.FontSize.SMALL))
-            foreground = JBColor.gray
-            border = JBUI.Borders.empty(4, 8, 2, 8)
+            font = UIUtil.getLabelFont().deriveFont(UIUtil.getFontSize(UIUtil.FontSize.SMALL))
+            foreground = UIUtil.getLabelDisabledForeground()
+            border = JBUI.Borders.empty(6, 8, 2, 8)
         }
         return JPanel(BorderLayout()).apply {
             add(label, BorderLayout.WEST)
-            isOpaque = false
+            background = list.background
+            isOpaque = true
         }
     }
 
@@ -41,34 +45,57 @@ class CommandPaletteCellRenderer : ListCellRenderer<PaletteEntry> {
         isSelected: Boolean
     ): JPanel {
         val item = entry.item
+        val fg = if (isSelected) list.selectionForeground else list.foreground
+        val dimFg = if (isSelected) list.selectionForeground else UIUtil.getLabelDisabledForeground()
 
+        // Icon gutter - fixed width so text aligns
+        val iconLabel = JLabel().apply {
+            preferredSize = Dimension(iconWidth, JBUI.scale(16))
+            horizontalAlignment = SwingConstants.CENTER
+            if (item.icon != null) icon = item.icon
+        }
+
+        // Action name
         val nameLabel = JLabel(item.name).apply {
-            foreground = if (isSelected) list.selectionForeground else list.foreground
+            foreground = fg
+            font = UIUtil.getLabelFont()
         }
 
-        val leftPanel = JPanel(FlowLayout(FlowLayout.LEFT, 4, 0)).apply {
-            isOpaque = false
-            if (item.icon != null) {
-                add(JLabel(item.icon))
+        // Shortcut inline after name
+        val shortcutLabel = if (item.shortcutText.isNotEmpty()) {
+            JLabel(" ${item.shortcutText}").apply {
+                foreground = dimFg
+                font = UIUtil.getLabelFont().deriveFont(UIUtil.getFontSize(UIUtil.FontSize.SMALL))
             }
+        } else null
+
+        val leftPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
+            isOpaque = false
+            add(iconLabel)
+            add(Box.createHorizontalStrut(JBUI.scale(4)))
             add(nameLabel)
+            if (shortcutLabel != null) add(shortcutLabel)
         }
 
-        val shortcutLabel = JLabel(item.shortcutText).apply {
-            foreground = JBColor.gray
-            font = UIUtil.getLabelFont().deriveFont(UIUtil.getFontSize(UIUtil.FontSize.SMALL))
-        }
+        // Group path right-aligned
+        val rightLabel = if (item.groupPath.isNotEmpty()) {
+            JLabel(item.groupPath).apply {
+                foreground = dimFg
+                font = UIUtil.getLabelFont().deriveFont(UIUtil.getFontSize(UIUtil.FontSize.SMALL))
+                border = JBUI.Borders.emptyRight(4)
+            }
+        } else null
 
         return JPanel(BorderLayout()).apply {
             add(leftPanel, BorderLayout.WEST)
-            add(shortcutLabel, BorderLayout.EAST)
-            border = JBUI.Borders.empty(2, 8)
+            if (rightLabel != null) add(rightLabel, BorderLayout.EAST)
+            border = JBUI.Borders.empty(3, 8, 3, 8)
             if (isSelected) {
                 background = list.selectionBackground
-                isOpaque = true
             } else {
-                isOpaque = false
+                background = list.background
             }
+            isOpaque = true
         }
     }
 }

@@ -7,6 +7,7 @@ data class ActionItem(
     val name: String,
     val icon: Icon?,
     val shortcutText: String,
+    val groupPath: String,
     val nameLower: String = name.lowercase(),
     val words: List<String> = nameLower.split(WORD_SPLIT_REGEX).filter { it.isNotEmpty() }
 ) {

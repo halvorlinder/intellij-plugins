@@ -1,12 +1,14 @@
 package com.example.commandpalette
 
 import com.intellij.ide.DataManager
-import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionGroup
+import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.KeyboardShortcut
-import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.keymap.KeymapManager
@@ -93,22 +95,21 @@ class CommandPalettePopup(private val originalEvent: AnActionEvent) {
         })
 
         val scrollPane = JBScrollPane(list).apply {
-            preferredSize = Dimension(500, 350)
             border = JBUI.Borders.empty()
         }
 
         val panel = JPanel(BorderLayout()).apply {
             add(searchField, BorderLayout.NORTH)
             add(scrollPane, BorderLayout.CENTER)
-            preferredSize = Dimension(500, 400)
+            preferredSize = Dimension(JBUI.scale(660), JBUI.scale(420))
         }
 
         popup = JBPopupFactory.getInstance()
             .createComponentPopupBuilder(panel, searchField.textEditor)
             .setRequestFocus(true)
             .setFocusable(true)
-            .setMovable(true)
-            .setTitle("Command Palette")
+            .setMovable(false)
+            .setResizable(false)
             .createPopup()
 
         popup.showCenteredInCurrentWindow(originalEvent.project!!)
@@ -168,6 +169,7 @@ class CommandPalettePopup(private val originalEvent: AnActionEvent) {
     private fun loadAllActions(): List<ActionItem> {
         val actionManager = ActionManager.getInstance()
         val keymap = KeymapManager.getInstance().activeKeymap
+        val groupPaths = buildGroupPaths(actionManager)
 
         return actionManager.getActionIdList("").asSequence()
             .mapNotNull { id ->
@@ -189,11 +191,49 @@ class CommandPalettePopup(private val originalEvent: AnActionEvent) {
                     actionId = id,
                     name = name,
                     icon = presentation.icon,
-                    shortcutText = shortcutText
+                    shortcutText = shortcutText,
+                    groupPath = groupPaths[id] ?: ""
                 )
             }
             .sortedBy { it.name.lowercase() }
             .toList()
+    }
+
+    private fun buildGroupPaths(actionManager: ActionManager): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+        val mainMenu = actionManager.getAction("MainMenu") as? ActionGroup ?: return result
+        collectPaths(actionManager, mainMenu, emptyList(), result)
+        return result
+    }
+
+    private fun collectPaths(
+        actionManager: ActionManager,
+        group: ActionGroup,
+        path: List<String>,
+        result: MutableMap<String, String>
+    ) {
+        val children = try {
+            group.getChildren(null)
+        } catch (_: Exception) {
+            return
+        }
+
+        for (child in children) {
+            when {
+                child == null || child is Separator -> continue
+                child is ActionGroup -> {
+                    val groupName = child.templatePresentation.text
+                    val newPath = if (!groupName.isNullOrBlank()) path + groupName else path
+                    collectPaths(actionManager, child, newPath, result)
+                }
+                else -> {
+                    val id = actionManager.getId(child) ?: continue
+                    if (id !in result && path.isNotEmpty()) {
+                        result[id] = path.joinToString(" | ")
+                    }
+                }
+            }
+        }
     }
 
     private fun keystrokeToText(keyStroke: KeyStroke): String {

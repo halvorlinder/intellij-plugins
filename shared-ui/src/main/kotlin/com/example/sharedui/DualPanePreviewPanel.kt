@@ -146,6 +146,7 @@ class DualPanePreviewPanel<T : PreviewItem>(
     }
 
     private fun scrollAndHighlight(editor: EditorEx, item: T) {
+        if (editor.isDisposed) return
         editor.markupModel.removeAllHighlighters()
 
         val safeLine = item.line.coerceIn(0, editor.document.lineCount - 1)

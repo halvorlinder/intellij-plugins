@@ -20,3 +20,6 @@ Thumbs.db
 
 # IntelliJ Platform Gradle Plugin cache
 **/.intellijPlatform/
+
+# Bare worktree infrastructure (top-level only)
+/.bare/

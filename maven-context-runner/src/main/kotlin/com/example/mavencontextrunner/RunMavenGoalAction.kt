@@ -19,7 +19,7 @@ import org.jetbrains.idea.maven.execution.MavenRunnerParameters
 import org.jetbrains.idea.maven.project.MavenProjectsManager
 
 abstract class RunMavenGoalAction(
-    private val goal: String,
+    private val goals: List<String>,
     private val description: String,
     private val runSpotlessFirst: Boolean = false
 ) : AnAction() {
@@ -33,10 +33,10 @@ abstract class RunMavenGoalAction(
 
         if (runSpotlessFirst) {
             runMavenGoalThen(project, workingDir, "spotless:apply") {
-                runMavenGoal(project, workingDir, goal)
+                runMavenGoals(project, workingDir, goals)
             }
         } else {
-            runMavenGoal(project, workingDir, goal)
+            runMavenGoals(project, workingDir, goals)
         }
     }
 
@@ -72,7 +72,7 @@ abstract class RunMavenGoalAction(
     }
 
     private fun runMavenGoalThen(project: Project, workingDir: String, firstGoal: String, onSuccess: () -> Unit) {
-        val configSettings = createMavenConfig(project, workingDir, firstGoal)
+        val configSettings = createMavenConfig(project, workingDir, listOf(firstGoal))
 
         val connection = project.messageBus.connect()
         connection.subscribe(ExecutionManager.EXECUTION_TOPIC, object : ExecutionListener {
@@ -93,15 +93,15 @@ abstract class RunMavenGoalAction(
         launchMavenConfig(configSettings)
     }
 
-    private fun runMavenGoal(project: Project, workingDir: String, goal: String) {
-        launchMavenConfig(createMavenConfig(project, workingDir, goal))
+    private fun runMavenGoals(project: Project, workingDir: String, goals: List<String>) {
+        launchMavenConfig(createMavenConfig(project, workingDir, goals))
     }
 
-    private fun createMavenConfig(project: Project, workingDir: String, goal: String) =
+    private fun createMavenConfig(project: Project, workingDir: String, goals: List<String>) =
         MavenRunConfigurationType.createRunnerAndConfigurationSettings(
             null,
             null,
-            MavenRunnerParameters(true, workingDir, null as String?, listOf(goal), emptyList()),
+            MavenRunnerParameters(true, workingDir, null as String?, goals, emptyList()),
             project
         )
 
@@ -113,8 +113,9 @@ abstract class RunMavenGoalAction(
     }
 }
 
-class MavenVerifyAction : RunMavenGoalAction("verify", "Maven Verify", runSpotlessFirst = true)
-class MavenTestAction : RunMavenGoalAction("test", "Maven Test", runSpotlessFirst = true)
-class MavenCleanAction : RunMavenGoalAction("clean", "Maven Clean", runSpotlessFirst = true)
-class SpotlessApplyAction : RunMavenGoalAction("spotless:apply", "Spotless Apply")
-class MavenCompileAction : RunMavenGoalAction("compile", "Maven Compile", runSpotlessFirst = true)
+class MavenVerifyAction : RunMavenGoalAction(listOf("verify"), "Maven Verify", runSpotlessFirst = true)
+class MavenTestAction : RunMavenGoalAction(listOf("test"), "Maven Test", runSpotlessFirst = true)
+class MavenCleanAction : RunMavenGoalAction(listOf("clean"), "Maven Clean", runSpotlessFirst = true)
+class SpotlessApplyAction : RunMavenGoalAction(listOf("spotless:apply"), "Spotless Apply")
+class MavenCompileAction : RunMavenGoalAction(listOf("compile"), "Maven Compile", runSpotlessFirst = true)
+class MavenDeepCleanAction : RunMavenGoalAction(listOf("clean", "dependency:purge-local-repository", "-DreResolve=false"), "Maven Deep Clean")

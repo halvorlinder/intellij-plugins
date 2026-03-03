@@ -3,13 +3,14 @@
     <name>Maven Context Runner</name>
     <vendor>Your Name</vendor>
     <description><![CDATA[
-    Run Maven goals (verify, test, clean, compile, spotless:apply) for the module containing the current file.
-    All commands (except Spotless Apply) run spotless:apply first.
+    Run Maven goals (verify, test, clean, compile, spotless:apply, deep clean) for the module containing the current file.
+    All commands (except Spotless Apply, Compile, and Deep Clean) run spotless:apply first.
 
     Default keyboard shortcuts:
     - Option+V: Maven Verify
     - Option+T: Maven Test
     - Option+C: Maven Clean
+    - Option+D: Maven Deep Clean (clean + purge local repository)
     - Option+F: Spotless Apply
     - Option+B: Maven Compile
     ]]></description>
@@ -63,12 +64,22 @@
             <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt B"/>
         </action>
 
+        <action id="MavenContextRunner.DeepClean"
+                class="com.example.mavencontextrunner.MavenDeepCleanAction"
+                text="Maven Deep Clean (Current Module)"
+                description="Run mvn clean dependency:purge-local-repository for the module containing the current file">
+            <keyboard-shortcut keymap="$default" first-keystroke="alt D"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt D"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="meta alt D"/>
+        </action>
+
         <!-- Add to Tools menu for discoverability -->
         <group id="MavenContextRunner.Menu" text="Maven Context Runner" popup="true">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <reference ref="MavenContextRunner.Verify"/>
             <reference ref="MavenContextRunner.Test"/>
             <reference ref="MavenContextRunner.Clean"/>
+            <reference ref="MavenContextRunner.DeepClean"/>
             <reference ref="MavenContextRunner.SpotlessApply"/>
             <reference ref="MavenContextRunner.Compile"/>
         </group>

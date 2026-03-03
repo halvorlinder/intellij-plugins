@@ -7,7 +7,10 @@ An IntelliJ IDEA plugin that runs Maven goals for the module containing the curr
 When you're editing a file inside a Maven project, press:
 - **Option+V** (Mac) / **Alt+V** (Windows/Linux): Run `mvn verify`
 - **Option+T** (Mac) / **Alt+T** (Windows/Linux): Run `mvn test`
+- **Option+C** (Mac) / **Alt+C** (Windows/Linux): Run `mvn clean`
+- **Option+D** (Mac) / **Alt+D** (Windows/Linux): Run `mvn clean dependency:purge-local-repository` (deep clean — also purges cached dependencies from ~/.m2)
 - **Option+F** (Mac) / **Alt+F** (Windows/Linux): Run `mvn spotless:apply`
+- **Option+B** (Mac) / **Alt+B** (Windows/Linux): Run `mvn compile`
 
 The plugin automatically detects which Maven module contains your current file and runs the goal in that module's directory.
 
@@ -48,8 +51,8 @@ After installing, you can change the shortcuts in:
 Edit `RunMavenGoalAction.kt` and add new classes:
 
 ```kotlin
-class MavenCleanAction : RunMavenGoalAction("clean", "Maven Clean")
-class MavenInstallAction : RunMavenGoalAction("install", "Maven Install")
+class MavenInstallAction : RunMavenGoalAction(listOf("install"), "Maven Install")
+class MavenDeepCleanAction : RunMavenGoalAction(listOf("clean", "dependency:purge-local-repository"), "Maven Deep Clean")
 ```
 
 Then register them in `plugin.xml`:
